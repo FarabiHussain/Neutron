@@ -9,7 +9,7 @@ def init_vars():
     set_appearance_mode("dark")
     # set_default_color_theme("dark-blue")
     root = CTk()
-    # root.resizable(False, False)
+    root.resizable(False, False)
 
     cwd = getcwd()
     font_family = CTkFont(family="Roboto Bold")
