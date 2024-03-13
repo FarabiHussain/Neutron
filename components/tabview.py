@@ -6,7 +6,6 @@ class Tabview:
     def __init__(self, master, new_tabs=[]) -> None:
 
         self.tabview = ctk.CTkTabview(master)
-
         self.tabview.pack(expand=True, fill="both", padx=10, pady=10)
 
         if len(new_tabs) > 0:

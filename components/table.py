@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from components.ctk_xyframe import CTkXYFrame
+from CTkTable import *
 
 
 class Table:
@@ -10,17 +11,21 @@ class Table:
         self.xy_frame = CTkXYFrame(self.parent_frame)
         self.xy_frame.pack(fill="both", expand=True, padx=0, pady=0)
 
+        self.table = None
+        self.columns = new_columns
+
         if len(new_columns) > 0:
-            self.columns = []
-            self.set_columns(master, new_columns)
+            self.set_columns(new_columns)
 
-    def set_columns(self, master, new_columns):
-        master.grid_columnconfigure(1, weight=1)
+    def set_columns(self, new_columns):
+        self.table = CTkTable(self.xy_frame, values=new_columns, corner_radius=2)
+        self.table.pack(expand=True, fill="both", pady=5, padx=5)
 
-        for idx, col in enumerate(new_columns):
-            self.columns.append(col)
-            print("col: ", col)
+    def set_data(self, new_data):
+        for row in new_data:
+            self.columns.append(row)
 
-            ctk.CTkLabel(
-                self.xy_frame, text=col, fg_color="#aaaaaa"
-            ).grid(row=0, column=idx, pady=5, padx=5)
+        self.table.destroy()
+        self.table = CTkTable(self.xy_frame, values=self.columns, corner_radius=2)
+        self.table.pack(expand=True, fill="both", pady=5, padx=5)
+
