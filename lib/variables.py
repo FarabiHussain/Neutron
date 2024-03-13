@@ -7,7 +7,7 @@ def init_vars():
     global screen_w, screen_h, form, root, cwd, icons, font_family
 
     set_appearance_mode("dark")
-    set_default_color_theme("dark-blue")
+    # set_default_color_theme("dark-blue")
     root = CTk()
     # root.resizable(False, False)
 

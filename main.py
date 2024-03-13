@@ -13,12 +13,11 @@ def render():
     system("cls")
     vr.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
     vr.root.iconbitmap(rs.register("assets\\icons\\icon.ico"))
-    # vr.root.configure(fg_color="#111111")
     vr.root.title(f"Neutron ({vr.form['version']})")
 
     container = Tabview(vr.root, ["Clients", "Documents", "Cases", "Finances"])
     container_tabs = container.get_tabs()
-    clients_tbl = Table(container_tabs["Clients"])
+    clients_tbl = Table(container_tabs["Clients"], ["UCI", "Given Name", "Last Name", "Current Status", "Cases", ""])
 
     vr.root.mainloop()
 
