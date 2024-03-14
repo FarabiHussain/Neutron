@@ -9,7 +9,7 @@ def init_vars():
     set_appearance_mode("dark")
     # set_default_color_theme("dark-blue")
     root = CTk()
-    root.resizable(False, False)
+    # root.resizable(False, False)
 
     cwd = getcwd()
     font_family = CTkFont(family="Roboto Bold")
@@ -23,27 +23,27 @@ def init_vars():
 def set_icons():
     icons = {}
 
-    # icons_specs = {
-    #     "folder": None,
-    #     "clear": None,
-    #     "search": None,
-    #     "docx": None,
-    #     "add": None,
-    #     "open": None,
-    # }
+    icons_specs = {
+        # "folder": None,
+        # "clear": None,
+        # "search": None,
+        # "docx": None,
+        # "add": None,
+        # "open": None,
+    }
 
-    # for icon_name in list(icons_specs.keys()):
-    #     icons_specs[icon_name] = img.open(
-    #         rs.register("assets\\icons\\" + icon_name + ".png")
-    #     )
+    for icon_name in list(icons_specs.keys()):
+        icons_specs[icon_name] = img.open(
+            rs.register("assets\\icons\\" + icon_name + ".png")
+        )
 
-    #     img_size = icons_specs[icon_name].size
-    #     img_ratio = img_size[0]/img_size[1]
+        img_size = icons_specs[icon_name].size
+        img_ratio = img_size[0]/img_size[1]
 
-    #     icons[icon_name] = CTkImage(
-    #         light_image=None,
-    #         dark_image=icons_specs[icon_name],
-    #         size=(25*img_ratio, 25),
-    #     )
+        icons[icon_name] = CTkImage(
+            light_image=None,
+            dark_image=icons_specs[icon_name],
+            size=(25*img_ratio, 25),
+        )
 
     return icons
