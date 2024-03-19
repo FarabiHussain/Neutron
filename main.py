@@ -1,8 +1,13 @@
-import os
 from lib import *
 from components import *
 from database import *
-import names, random
+from faker import Faker
+from datetime import datetime, date
+import names, random, os
+
+
+db = Database("data.db")
+fk = Faker()
 
 
 def render():
@@ -19,94 +24,90 @@ def render():
 
     container = Tabview(vr.root, ["Clients", "Documents", "Cases", "Finances"])
     container_tabs = container.get_tabs()
-    clients_tbl = Table(
-        container_tabs["Clients"],
-        ["UCI", "Given Name", "Last Name", "Current Status", "Cases"],
-    )
+    clients_tbl = Table(container_tabs["Clients"], ["UCI", "Given Name", "Last Name", "Current Status", "Cases"])
+    # clients_tbl.set_data()
+    # vr.root.mainloop()
 
-    add_data = []
 
-    for _ in range(50):
+def populate_tables():
+    os.system("del .\\data.db")
+    db = Database("data.db")
+    db.initialize_tables()
+
+    for _ in range(5):
+
         client_name = names.get_full_name(gender=random.choice(["male", "female"]))
-        given_name = client_name.split(" ")[0]
-        last_name = client_name.split(" ")[1]
-        uci = str(random.randint(1000000, 9999999))
-        stats = random.choice(["PGWP", "SP", "SOWP", "TRP", "PR"])
+        last_name = client_name.split(" ")[0]
+        first_name = client_name.split(" ")[1]
+        client_uci = str(random.randint(1000000, 9999999))
 
-        add_data.append([uci, given_name, last_name, stats, "0"])
+        db.conn.execute(
+            (
+                """
+                INSERT INTO Client (
+                    created_date,
+                    client_uci,
+                    first_name,
+                    last_name,
+                    date_of_birth,
+                    sex,
+                    marital_status,
+                    email,
+                    phone,
+                    cases_qty
+                )
+                VALUES (?,?,?,?,?,?,?,?,?,?)
+                """
+            ),
+            (
+                datetime.now(),
+                client_uci,
+                last_name,
+                first_name,
+                fk.date_of_birth(minimum_age=21, maximum_age=45),
+                random.choice(["Male", "Female"]),
+                f"{last_name.lower()}_{first_name.lower()}@email.com",
+                f"+1 ({str(random.randint(100,999))}) {str(random.randint(100,999))}-{str(random.randint(1000,9999))}",
+                random.choice(["Married", "Single", "Common-Law", "Divorced"]),
+                0,
+            ),
+        )
 
-    clients_tbl.set_data(add_data)
+        fetched_id = db.conn.execute(
+            f"""
+            SELECT client_id
+            FROM Client
+            WHERE client_uci="{client_uci}"
+            """
+        ).fetchone()
 
-    # vr.root.state('zoomed')
-    vr.root.mainloop()
+        db.conn.execute(
+            (
+                """
+                INSERT INTO Status (
+                    status_type,
+                    status_issued,
+                    status_expiry,
+                    current_status,
+                    status_created,
+                    client_id
+                )
+                VALUES (?,?,?,?,?,?)
+                """
+            ),
+            (
+                random.choice(["PGWP", "SP", "SOWP", "TRP", "PR"]),
+                fk.date_of_birth(minimum_age=1, maximum_age=3),
+                fk.date_between(date(2025, 1, 1), date(2026, 12, 31)),
+                1,
+                datetime.now(),
+                fetched_id[0] 
+            ),
+        )
 
-def setup_database():
-    db = Database("data")
-
-    db.create_table(
-        "Status", 
-        {
-            "status_id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-            "status_type": "TEXT",
-            "status_issued": "TEXT",
-            "status_expiry": "TEXT",
-            "current_status": "INTEGER",
-            "status_created": "TEXT",
-            "client_id": "TEXT",
-            'FOREIGN KEY ("client_id")': 'REFERENCES "Client"("client_id")',
-        }
-    )
-
-    db.create_table(
-        'Client', 
-        {
-            'client_id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-            'created_date': 'TEXT',
-            'client_uci': 'TEXT',
-            'first_name': 'TEXT',
-            'last_name': 'TEXT',
-            'date_of_birth': 'TEXT',
-            'sex': 'TEXT',
-            'marital_status': 'TEXT',
-            'email': 'TEXT',
-            'phone': 'TEXT',
-            'street': 'TEXT',
-            'city': 'TEXT',
-            'province': 'TEXT',
-            'postal': 'TEXT',
-            'country': 'TEXT',
-        }
-    )
-
-    db.create_table(
-        "Application", 
-        {
-            "application_id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-            "application_type": "TEXT",
-            "application_number": "TEXT",
-            "created_date": "TEXT",
-            "client_id": "TEXT",
-            'FOREIGN KEY ("client_id")': 'REFERENCES "Client"("client_id")',
-        }
-    )
-
-    db.create_table(
-        "Transaction", 
-        {
-            "transaction_id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-            "transaction_amount": "TEXT",
-            "transaction_number": "TEXT",
-            "created_date": "TEXT",
-            "client_id": "TEXT",
-            "application_id": "INTEGER",
-            'FOREIGN KEY ("client_id")': 'REFERENCES "Client"("client_id")',
-            'FOREIGN KEY ("application_id")': 'REFERENCES "Application"("application_id")',
-        }
-    )
-
+    db.conn.commit()
 
 
 vr.init_vars()
-os.system("del .\\data.db")
-setup_database()
-# render()
+# populate_tables()
+render()
