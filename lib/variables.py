@@ -1,10 +1,11 @@
 from lib import *
 from customtkinter import *
+from database import *
 
 
 # initalize the variables to be used throughout the app
 def init_vars():
-    global screen_w, screen_h, form, root, cwd, icons, font_family
+    global screen_w, screen_h, form, root, cwd, icons, font_family, db
 
     # set_appearance_mode("dark")
     # set_default_color_theme("dark-blue")
@@ -17,6 +18,8 @@ def init_vars():
     screen_h = root.winfo_screenheight()
     form = {"version": "v0.0.1"}
     icons = set_icons()
+    db = Database("data.sqlite")
+    db.conn.execute("PRAGMA foreign_keys = ON")
 
 
 # populate the icons

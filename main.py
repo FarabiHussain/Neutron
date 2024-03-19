@@ -6,7 +6,6 @@ from datetime import datetime, date
 import names, random, os
 
 
-db = Database("data.db")
 fk = Faker()
 
 
@@ -24,17 +23,31 @@ def render():
 
     container = Tabview(vr.root, ["Clients", "Documents", "Cases", "Finances"])
     container_tabs = container.get_tabs()
-    clients_tbl = Table(container_tabs["Clients"], ["UCI", "Given Name", "Last Name", "Current Status", "Cases"])
-    # clients_tbl.set_data()
-    # vr.root.mainloop()
+
+    clients_tbl = Table(
+        container_tabs["Clients"],
+        ["UCI", "First Name", "Last Name", "Current Status", "Cases"],
+    )
+
+    client_data = vr.db.conn.execute(
+        """
+        SELECT client_uci, first_name, last_name, status_type, cases_qty
+        FROM Client
+        NATURAL JOIN Status
+        LIMIT 50
+        """
+    )
+
+    clients_tbl.set_data(client_data.fetchall())
+    vr.root.mainloop()
 
 
 def populate_tables():
-    os.system("del .\\data.db")
-    db = Database("data.db")
+    os.system("del .\\data.sqlite")
+    db = Database("data.sqlite")
     db.initialize_tables()
 
-    for _ in range(5):
+    for _ in range(50):
 
         client_name = names.get_full_name(gender=random.choice(["male", "female"]))
         last_name = client_name.split(" ")[0]
@@ -101,7 +114,7 @@ def populate_tables():
                 fk.date_between(date(2025, 1, 1), date(2026, 12, 31)),
                 1,
                 datetime.now(),
-                fetched_id[0] 
+                fetched_id[0],
             ),
         )
 

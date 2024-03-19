@@ -1,16 +1,17 @@
+from lib import *
 from tkinter import StringVar
-import customtkinter as ctk
+import customtkinter as ctk, re
 from components.ctk_xyframe import CTkXYFrame
 from CTkTable import *
 
 
 class Table:
-    """
-    Renders the table including its supporting components 
-    like the table controls and row operations
-    """
 
     def __init__(self, master, new_headings: list[str] = []) -> None:
+        """
+        Renders the table including its supporting components
+        like the table controls and row operations
+        """
 
         # add the parent frame that holds all of the following
         self.parent_frame = ctk.CTkFrame(master)
@@ -62,10 +63,10 @@ class Table:
                 sticky="nsew",
             )
 
-    def set_data_in_cells(self, new_data: list[str]):
+    def set_data_in_cells(self, new_data: list | tuple):
         for i, row in enumerate(new_data):
 
-            row_color = "#444444" if i % 2 == 0 else "#333333"
+            row_color = "#444444" if i % 2 == 0 else "#3d3d3d"
 
             ctk.CTkRadioButton(
                 self.scroll_frame,
@@ -102,13 +103,13 @@ class Table:
 
             self.rows.append(row)
 
-    def set_data_in_rows(self, new_data: list[str]):
+    def set_data_in_rows(self, new_data: list | tuple):
         for i, row in enumerate(new_data):
 
             row_frame = ctk.CTkFrame(
                 self.scroll_frame,
                 height=40,
-                fg_color="#444444" if i % 2 == 0 else "#3c3c3c",
+                fg_color="#444444" if i % 2 == 0 else "#555555",
             )
 
             ctk.CTkRadioButton(
@@ -153,7 +154,7 @@ class Table:
 
             self.rows.append(row)
 
-    def set_data(self, new_data: list[str], style: str = "cells"):
+    def set_data(self, new_data: list | tuple, style: str = "cells"):
         """
         Replace existing table data with the new data.\n
         Set the style as either 'cells' or 'rows'.
@@ -164,6 +165,34 @@ class Table:
         elif style == "rows":
             self.set_data_in_rows(new_data)
 
+    def remove_data(self, data):
+
+        # the passed StringVar gets returned as a string instead of a tuple
+        # unfrotunately I have to convert this into a list[str] myself
+        data = (re.sub("\(|\)|'", "", data)).split(", ")
+
+        vr.db.conn.execute(
+            f'DELETE FROM Client WHERE client_id=(SELECT client_id FROM Client WHERE client_uci="{data[0]}")'
+        )
+
+        client_data = vr.db.conn.execute(
+            """
+            SELECT client_uci, first_name, last_name, status_type, cases_qty
+            FROM Client
+            NATURAL JOIN Status
+            LIMIT 50
+            """
+        )
+
+        vr.db.conn.commit()
+
+        self.scroll_frame.destroy()
+        self.scroll_frame = ctk.CTkScrollableFrame(self.parent_frame)
+        self.scroll_frame.grid(row=1, pady=3, padx=1, sticky="nsew", rowspan=3)
+
+        self.set_headings(self.headings)
+        self.set_data(client_data.fetchall())
+
     def add_op_buttons(self):
         master = self.operations_frame
 
@@ -173,7 +202,7 @@ class Table:
             width=200,
             corner_radius=4,
             fg_color="#1F1E1E",
-            command=lambda: print(self.radio.get()),
+            command=lambda: self.remove_data(self.radio.get()),
         ).grid(
             row=0,
             column=0,
@@ -181,4 +210,3 @@ class Table:
             padx=2,
             sticky="nsew",
         )
-
