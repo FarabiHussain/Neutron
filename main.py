@@ -24,10 +24,17 @@ def render():
     container = Tabview(vr.root, ["Clients", "Documents", "Cases", "Finances"])
     container_tabs = container.get_tabs()
 
-    clients_tbl = Table(
-        container_tabs["Clients"],
-        ["UCI", "First Name", "Last Name", "Current Status", "Cases"],
-    )
+    tab_headings = {
+        "Clients": ["UCI", "First Name", "Last Name", "Current Status", "Cases"],
+        "Documents": ["UCI", "Type", "Application No.", "Issued", "Expiry"],
+        "Cases": ["UCI", "Type", "Created", "Payment"],
+        "Finances": ["UCI", "Amount", "Due By", "Last Name"],
+    }
+
+    clients_tbl = Table(container_tabs["Clients"], "Clients", tab_headings["Clients"])
+    documents_tbl = Table(container_tabs["Documents"], "Documents", tab_headings["Documents"])
+    cases_tbl = Table(container_tabs["Cases"], "Cases", tab_headings["Cases"])
+    finances_tbl = Table(container_tabs["Finances"], "Finances", tab_headings["Finances"])
 
     client_data = vr.db.conn.execute(
         """

@@ -7,7 +7,7 @@ from CTkTable import *
 
 class Table:
 
-    def __init__(self, master, new_headings: list[str] = []) -> None:
+    def __init__(self, master, tab, new_headings: list[str] = []) -> None:
         """
         Renders the table including its supporting components
         like the table controls and row operations
@@ -37,8 +37,9 @@ class Table:
         self.rows = []
         self.radio = StringVar(value="")
         self.widths = [200, 300, 300, 200, 100]
+        self.tab = tab
 
-        self.add_op_buttons()
+        self.place_delete_button()
 
         if len(new_headings) > 0:
             self.set_headings(self.headings)
@@ -165,35 +166,26 @@ class Table:
         elif style == "rows":
             self.set_data_in_rows(new_data)
 
-    def remove_data(self, data):
+    def remove_data(self):
+        """
+        Executes a query to remove the data and another to populate the table.\n
+        It re-renders the table to display the updated database
+        """
 
-        # the passed StringVar gets returned as a string instead of a tuple
-        # unfrotunately I have to convert this into a list[str] myself
-        data = (re.sub("\(|\)|'", "", data)).split(", ")
+        queries = self.get_queries()
 
-        vr.db.conn.execute(
-            f'DELETE FROM Client WHERE client_id=(SELECT client_id FROM Client WHERE client_uci="{data[0]}")'
-        )
-
-        client_data = vr.db.conn.execute(
-            """
-            SELECT client_uci, first_name, last_name, status_type, cases_qty
-            FROM Client
-            NATURAL JOIN Status
-            LIMIT 50
-            """
-        )
-
+        vr.db.conn.execute(queries['remove'])
         vr.db.conn.commit()
+        table_data = vr.db.conn.execute(queries['populate'])
 
         self.scroll_frame.destroy()
         self.scroll_frame = ctk.CTkScrollableFrame(self.parent_frame)
         self.scroll_frame.grid(row=1, pady=3, padx=1, sticky="nsew", rowspan=3)
 
         self.set_headings(self.headings)
-        self.set_data(client_data.fetchall())
+        self.set_data(table_data.fetchall())
 
-    def add_op_buttons(self):
+    def place_delete_button(self):
         master = self.operations_frame
 
         ctk.CTkButton(
@@ -202,7 +194,7 @@ class Table:
             width=200,
             corner_radius=4,
             fg_color="#1F1E1E",
-            command=lambda: self.remove_data(self.radio.get()),
+            command=lambda: self.remove_data(),
         ).grid(
             row=0,
             column=0,
@@ -210,3 +202,45 @@ class Table:
             padx=2,
             sticky="nsew",
         )
+
+    def get_queries(self):
+        """
+        Returns the required query based on the current tab
+        """
+
+        # The StringVar gets returned as a string instead of a tuple
+        # unfortunately I have to convert this into a list[str] myself
+        data = (re.sub("\(|\)|'", "", self.radio.get())).split(", ")
+
+        # define the query which will populate the table again once data is deleted
+        if self.tab == "Clients":
+            table = "Client"
+            populate = """
+                SELECT client_uci, first_name, last_name, status_type, cases_qty
+                FROM Client
+                NATURAL JOIN Status
+                LIMIT 50
+                """
+        elif self.tab == "Documents":
+            table = "Document"
+            populate = ""
+        elif self.tab == "Cases":
+            table = "Case"
+            populate = ""
+        elif self.tab == "Finances":
+            table = "Finance"
+            populate = ""
+
+        # define the query that needs to run when the button is clicked based on the tab
+        # in the converted list above, the 0 index MUST contain the client_uci
+        remove = f"""
+            DELETE 
+            FROM {table} 
+            WHERE client_id=(
+                SELECT client_id 
+                FROM Client 
+                WHERE client_uci="{data[0]}"
+            )
+            """
+
+        return {"remove": remove, "populate": populate}
