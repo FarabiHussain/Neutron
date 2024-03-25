@@ -21,18 +21,18 @@ def render():
     vr.root.iconbitmap(rs.register("assets\\icons\\icon.ico"))
     vr.root.title(f"Neutron ({vr.form['version']})")
 
-    container = Tabview(vr.root, ["Clients", "Documents", "Cases", "Finances"])
+    container = Tabview(vr.root, ["Clients", "Status", "Cases", "Finances"])
     container_tabs = container.get_tabs()
 
     tab_headings = {
         "Clients": ["UCI", "First Name", "Last Name", "Current Status", "Cases"],
-        "Documents": ["UCI", "Type", "Application No.", "Issued", "Expiry"],
+        "Status": ["UCI", "Type", "Application No.", "Issued", "Expiry"],
         "Cases": ["UCI", "Type", "Created", "Payment"],
         "Finances": ["UCI", "Amount", "Due By", "Last Name"],
     }
 
     clients_tbl = Table(container_tabs["Clients"], "Clients", tab_headings["Clients"])
-    documents_tbl = Table(container_tabs["Documents"], "Documents", tab_headings["Documents"])
+    status_tbl = Table(container_tabs["Status"], "Status", tab_headings["Status"])
     cases_tbl = Table(container_tabs["Cases"], "Cases", tab_headings["Cases"])
     finances_tbl = Table(container_tabs["Finances"], "Finances", tab_headings["Finances"])
 
@@ -45,7 +45,37 @@ def render():
         """
     )
 
+    status_data = vr.db.conn.execute(
+        """
+        SELECT status_type, status_issued, status_expiry
+        FROM Status
+        NATURAL JOIN Status
+        LIMIT 50
+        """
+    )
+
+    case_data = vr.db.conn.execute(
+        """
+        SELECT client_uci, first_name, last_name, status_type
+        FROM Client
+        NATURAL JOIN Status
+        LIMIT 50
+        """
+    )
+
+    finance_data = vr.db.conn.execute(
+        """
+        SELECT client_uci, first_name, last_name, status_type
+        FROM Client
+        NATURAL JOIN Status
+        LIMIT 50
+        """
+    )
+
     clients_tbl.set_data(client_data.fetchall())
+    status_tbl.set_data(status_data.fetchall())
+    cases_tbl.set_data(case_data.fetchall())
+    finances_tbl.set_data(finance_data.fetchall())
     vr.root.mainloop()
 
 

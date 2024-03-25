@@ -172,7 +172,7 @@ class Table:
         It re-renders the table to display the updated database
         """
 
-        queries = self.get_queries()
+        queries = self.generate_queries()
 
         vr.db.conn.execute(queries['remove'])
         vr.db.conn.commit()
@@ -203,7 +203,7 @@ class Table:
             sticky="nsew",
         )
 
-    def get_queries(self):
+    def generate_queries(self):
         """
         Returns the required query based on the current tab
         """
